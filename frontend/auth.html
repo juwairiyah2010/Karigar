@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In / Register — Kaarigar</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'var(--background)',
+            foreground: 'var(--foreground)',
+            primary: 'var(--primary)',
+            forest: 'var(--forest)',
+            gold: 'var(--gold)',
+            cream: 'var(--cream)',
+            ink: 'var(--ink)',
+            border: 'var(--border)',
+            muted: 'var(--muted)',
+            'muted-foreground': 'var(--muted-foreground)',
+            card: 'var(--card)',
+            'card-foreground': 'var(--card-foreground)',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            warm: 'var(--shadow-warm)',
+            soft: 'var(--shadow-soft)',
+          },
+          backgroundImage: {
+            'gradient-warm': 'var(--gradient-warm)',
+            'gradient-cream': 'var(--gradient-cream)',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="/styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground font-sans min-h-screen flex flex-col justify-between">
+
+  <!-- Header -->
+  <header id="site-header"></header>
+
+  <!-- Auth forms container -->
+  <main class="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md bg-white border border-gray-200 rounded-2xl p-8 shadow-md space-y-6 relative">
+      
+      <!-- Toggle buttons -->
+      <div class="flex border-b border-gray-100">
+        <button id="toggle-login" class="flex-1 pb-3 text-sm font-semibold border-b-2 border-[#B54F2A] text-gray-900 transition">
+          Sign In
+        </button>
+        <button id="toggle-signup" class="flex-1 pb-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-900 transition">
+          Create Account
+        </button>
+      </div>
+
+      <!-- 1. Login Form -->
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Email Address</label>
+          <input type="email" id="login-email" required class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+          <input type="password" id="login-password" required class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+        </div>
+        <button type="submit" class="w-full bg-[#B54F2A] py-2.5 rounded-lg text-sm font-semibold text-white hover:bg-[#a04322] transition">
+          Sign In
+        </button>
+      </form>
+
+      <!-- 2. Signup Form -->
+      <form id="signup-form" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Email Address</label>
+          <input type="email" id="signup-email" required class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+          <input type="password" id="signup-password" required class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">I want to register as a</label>
+          <select id="signup-role" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+            <option value="customer">Customer (Patron)</option>
+            <option value="entrepreneur">Artisan (Micro-Entrepreneur)</option>
+          </select>
+        </div>
+
+        <!-- Artisan specific fields (hidden by default) -->
+        <div id="artisan-fields" class="space-y-4 hidden border-t border-gray-100 pt-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Business Name</label>
+            <input type="text" id="artisan-name" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Contact Phone</label>
+            <input type="tel" id="artisan-phone" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">City</label>
+              <input type="text" id="artisan-city" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">State</label>
+              <input type="text" id="artisan-state" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Select Craft Category</label>
+            <select id="artisan-category" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]">
+              <!-- Loaded dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Craft Description / Bio</label>
+            <textarea id="artisan-bio" rows="2" placeholder="Tell customers about your weaving legacy, pottery style, etc..." class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#B54F2A]"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-[#B54F2A] py-2.5 rounded-lg text-sm font-semibold text-white hover:bg-[#a04322] transition">
+          Create Account
+        </button>
+      </form>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer"></footer>
+
+  <!-- Central script -->
+  <script src="/app.js"></script>
+  <script>
+    const toggleLogin = document.getElementById('toggle-login');
+    const toggleSignup = document.getElementById('toggle-signup');
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const signupRole = document.getElementById('signup-role');
+    const artisanFields = document.getElementById('artisan-fields');
+
+    // Parse URL parameter to check screen mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    if (mode === 'signup') {
+      showSignup();
+    }
+
+    // Toggle forms
+    toggleLogin.addEventListener('click', showLogin);
+    toggleSignup.addEventListener('click', showSignup);
+
+    function showLogin() {
+      toggleLogin.className = "flex-1 pb-3 text-sm font-semibold border-b-2 border-[#B54F2A] text-gray-900 transition";
+      toggleSignup.className = "flex-1 pb-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-900 transition";
+      loginForm.classList.remove('hidden');
+      signupForm.classList.add('hidden');
+    }
+
+    function showSignup() {
+      toggleSignup.className = "flex-1 pb-3 text-sm font-semibold border-b-2 border-[#B54F2A] text-gray-900 transition";
+      toggleLogin.className = "flex-1 pb-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-900 transition";
+      signupForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+      loadCategoriesForSignup();
+    }
+
+    // Show/hide artisan fields
+    signupRole.addEventListener('change', (e) => {
+      if (e.target.value === 'entrepreneur') {
+        artisanFields.classList.remove('hidden');
+        document.getElementById('artisan-name').required = true;
+        document.getElementById('artisan-phone').required = true;
+        document.getElementById('artisan-city').required = true;
+        document.getElementById('artisan-state').required = true;
+      } else {
+        artisanFields.classList.add('hidden');
+        document.getElementById('artisan-name').required = false;
+        document.getElementById('artisan-phone').required = false;
+        document.getElementById('artisan-city').required = false;
+        document.getElementById('artisan-state').required = false;
+      }
+    });
+
+    // Load category options
+    async function loadCategoriesForSignup() {
+      const select = document.getElementById('artisan-category');
+      if (!select || select.children.length > 0) return;
+
+      try {
+        const categories = await apiRequest('/categories');
+        select.innerHTML = categories.map(c => `
+          <option value="${c._id}">${c.name}</option>
+        `).join('');
+      } catch (err) {
+        console.error("Failed to load categories for select:", err);
+      }
+    }
+
+    // Submit handlers
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const data = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+        setSession(data.token, data.user);
+        alert("Logged in successfully!");
+        window.location.href = "/dashboard.html";
+      } catch (err) {
+        alert(`Login failed: ${err.message}`);
+      }
+    });
+
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const role = signupRole.value;
+
+      const signupBody = { email, password, role };
+
+      if (role === 'entrepreneur') {
+        signupBody.business_name = document.getElementById('artisan-name').value;
+        signupBody.contact_phone = document.getElementById('artisan-phone').value;
+        signupBody.city = document.getElementById('artisan-city').value;
+        signupBody.state = document.getElementById('artisan-state').value;
+        signupBody.category_id = document.getElementById('artisan-category').value;
+        signupBody.bio = document.getElementById('artisan-bio').value;
+      }
+
+      try {
+        const data = await apiRequest('/auth/signup', {
+          method: 'POST',
+          body: JSON.stringify(signupBody)
+        });
+        setSession(data.token, data.user);
+        alert("Account created successfully!");
+        window.location.href = "/dashboard.html";
+      } catch (err) {
+        alert(`Registration failed: ${err.message}`);
+      }
+    });
+  </script>
+</body>
+</html>

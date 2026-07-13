@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artisan Profile — Kaarigar</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'var(--background)',
+            foreground: 'var(--foreground)',
+            primary: 'var(--primary)',
+            forest: 'var(--forest)',
+            gold: 'var(--gold)',
+            cream: 'var(--cream)',
+            ink: 'var(--ink)',
+            border: 'var(--border)',
+            muted: 'var(--muted)',
+            'muted-foreground': 'var(--muted-foreground)',
+            card: 'var(--card)',
+            'card-foreground': 'var(--card-foreground)',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            warm: 'var(--shadow-warm)',
+            soft: 'var(--shadow-soft)',
+          },
+          backgroundImage: {
+            'gradient-warm': 'var(--gradient-warm)',
+            'gradient-cream': 'var(--gradient-cream)',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="/styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground font-sans">
+
+  <!-- Header -->
+  <header id="site-header"></header>
+
+  <!-- Profile Container -->
+  <main class="mx-auto" id="profile-container">
+    <!-- Loaded dynamically -->
+    <div class="text-center py-40 text-gray-500 animate-pulse font-display text-xl">
+      Loading artisan profile...
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer"></footer>
+
+  <!-- Central script -->
+  <script src="/app.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const artisanId = urlParams.get('id');
+
+    let currentArtisan = null;
+    let selectedRating = 5;
+
+    async function loadProfile() {
+      const container = document.getElementById('profile-container');
+      if (!artisanId) {
+        container.innerHTML = `
+          <div class="mx-auto max-w-2xl px-4 py-24 text-center">
+            <h1 class="font-display text-4xl font-semibold text-foreground">Artisan ID missing</h1>
+            <a href="/browse.html" class="mt-6 inline-block rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-warm">Browse all artisans</a>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const data = await apiRequest(`/artisans/${artisanId}`);
+        currentArtisan = data.entrepreneur;
+        const products = data.products || [];
+        const services = data.services || [];
+        const reviews = data.reviews || [];
+
+        // Set document title
+        document.title = `${currentArtisan.business_name} — Kaarigar`;
+
+        // Render full details
+        container.innerHTML = `
+          <!-- Cover -->
+          <div class="relative h-64 w-full overflow-hidden bg-muted sm:h-80">
+            <img src="${currentArtisan.cover_image || '/assets/cat-artisan.jpg'}" alt="${currentArtisan.business_name}" class="h-full w-full object-cover" />
+            <div class="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent"></div>
+          </div>
+
+          <div class="mx-auto -mt-16 max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
+            <!-- Profile Info Card -->
+            <div class="rounded-3xl border border-border bg-card p-6 shadow-warm sm:p-8">
+              <div class="grid gap-6 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+                <!-- Avatar -->
+                <div class="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border-4 border-background bg-muted shadow-soft sm:h-28 sm:w-28">
+                  <img src="${currentArtisan.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'}" alt="${currentArtisan.business_name}" class="h-full w-full object-cover" />
+                </div>
+                
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h1 class="truncate font-display text-3xl font-semibold text-foreground">${currentArtisan.business_name}</h1>
+                    ${currentArtisan.verified ? `
+                      <span class="inline-flex items-center gap-1 rounded-full bg-forest/10 px-2.5 py-1 text-xs font-medium text-forest">
+                        <i data-lucide="badge-check" class="h-3.5 w-3.5"></i> Verified
+                      </span>
+                    ` : ''}
+                    ${currentArtisan.available === false ? `
+                      <span class="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 text-xs font-medium">
+                        Unavailable
+                      </span>
+                    ` : ''}
+                  </div>
+                  <div class="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    ${currentArtisan.category_name ? `<span class="rounded-full bg-accent/40 px-3 py-1 text-xs font-medium text-foreground">${currentArtisan.category_name}</span>` : ''}
+                    <span class="inline-flex items-center gap-1"><i data-lucide="map-pin" class="h-3.5 w-3.5"></i>${[currentArtisan.city, currentArtisan.state].filter(Boolean).join(", ")}</span>
+                    ${currentArtisan.years_experience ? `<span>${currentArtisan.years_experience}+ years</span>` : ''}
+                    <span class="inline-flex items-center gap-1">
+                      <i data-lucide="star" class="h-3.5 w-3.5 fill-gold text-gold"></i>
+                      <b class="text-foreground">${Number(currentArtisan.rating_avg).toFixed(1)}</b> (${currentArtisan.rating_count} reviews)
+                    </span>
+                  </div>
+                </div>
+                
+                ${currentArtisan.contact_phone ? `
+                  <a href="tel:${currentArtisan.contact_phone}" class="hidden shrink-0 items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent sm:inline-flex transition">
+                    <i data-lucide="phone" class="h-4 w-4"></i>${currentArtisan.contact_phone}
+                  </a>
+                ` : ''}
+              </div>
+              
+              ${currentArtisan.bio ? `<p class="mt-6 max-w-3xl leading-relaxed text-muted-foreground">${currentArtisan.bio}</p>` : ''}
+            </div>
+
+            <!-- Content Grid -->
+            <div class="mt-12 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
+              <!-- Services & Products -->
+              <div class="space-y-12">
+                <!-- Services -->
+                <section>
+                  <div class="flex items-end justify-between">
+                    <h2 class="font-display text-2xl font-semibold flex items-center gap-2 text-foreground">
+                      <i data-lucide="sparkles" class="h-5 w-5 text-primary"></i> Services
+                    </h2>
+                    <span class="text-sm text-muted-foreground">${services.length}</span>
+                  </div>
+                  <div class="divider-hand mt-3 text-primary"></div>
+                  
+                  ${services.length === 0 ? `
+                    <p class="mt-4 text-sm text-muted-foreground">No services listed yet.</p>
+                  ` : `
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                      ${services.map(s => renderServiceCard(s)).join('')}
+                    </div>
+                  `}
+                </section>
+
+                <!-- Products -->
+                <section>
+                  <div class="flex items-end justify-between">
+                    <h2 class="font-display text-2xl font-semibold flex items-center gap-2 text-foreground">
+                      <i data-lucide="package" class="h-5 w-5 text-primary"></i> Handmade products
+                    </h2>
+                    <span class="text-sm text-muted-foreground">${products.length}</span>
+                  </div>
+                  <div class="divider-hand mt-3 text-primary"></div>
+                  
+                  ${products.length === 0 ? `
+                    <p class="mt-4 text-sm text-muted-foreground">No products listed yet.</p>
+                  ` : `
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                      ${products.map(p => renderProductCard(p)).join('')}
+                    </div>
+                  `}
+                </section>
+              </div>
+
+              <!-- Reviews Side Panel -->
+              <aside class="space-y-6">
+                ${renderReviewsPanel(reviews)}
+              </aside>
+            </div>
+            
+            <div class="h-16"></div>
+          </div>
+        `;
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+
+      } catch (err) {
+        console.error("Profile load error:", err);
+        container.innerHTML = `
+          <div class="mx-auto max-w-2xl px-4 py-24 text-center">
+            <h1 class="font-display text-4xl font-semibold text-foreground">Artisan not found</h1>
+            <p class="mt-2 text-sm text-muted-foreground">We couldn't retrieve profile details for this artisan.</p>
+            <a href="/browse.html" class="mt-6 inline-block rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-warm">Browse all artisans</a>
+          </div>
+        `;
+      }
+    }
+
+    // 1. Render Service Card
+    function renderServiceCard(s) {
+      const user = getUser();
+      const isLoggedIn = !!user;
+      const isAvailable = currentArtisan.available !== false;
+
+      return `
+        <div class="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-soft ${!isAvailable ? 'opacity-75' : ''}">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="font-display text-lg font-semibold text-foreground">${s.title}</h3>
+            <span class="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">₹${Number(s.price).toLocaleString("en-IN")}</span>
+          </div>
+          ${s.description ? `<p class="mt-2 text-sm text-muted-foreground">${s.description}</p>` : ''}
+          ${s.duration_minutes ? `
+            <p class="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <i data-lucide="clock" class="h-3 w-3"></i> ~${s.duration_minutes} min
+            </p>
+          ` : ''}
+          
+          <div class="mt-4" id="service-booking-${s._id}">
+            ${!isAvailable ? `
+              <span class="w-full text-center block rounded-lg bg-gray-100 border border-gray-200 px-4 py-2 text-sm font-medium text-gray-400">
+                Unavailable for booking
+              </span>
+            ` : isLoggedIn ? `
+              <button
+                onclick="toggleServiceForm('${s._id}')"
+                class="w-full rounded-lg bg-forest px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition"
+              >Request this service</button>
+            ` : `
+              <a
+                href="/auth.html?mode=login"
+                class="w-full text-center block rounded-lg bg-forest px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition"
+              >Sign in to request</a>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // Toggle service input form inside card
+    function toggleServiceForm(sid) {
+      const container = document.getElementById(`service-booking-${sid}`);
+      const service = currentArtisan;
+      container.innerHTML = `
+        <div class="space-y-2 mt-2">
+          <textarea id="service-notes-${sid}" rows="2" placeholder="Describe customizations, dimensions, or details..." class="w-full rounded-lg border border-border bg-background p-2 text-sm text-foreground outline-none focus:border-primary"></textarea>
+          <div class="flex gap-2">
+            <button onclick="submitServiceRequest('${sid}')" id="service-btn-${sid}" class="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-95 transition">Send request</button>
+            <button onclick="cancelServiceForm('${sid}')" class="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-accent transition">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function cancelServiceForm(sid) {
+      const container = document.getElementById(`service-booking-${sid}`);
+      container.innerHTML = `
+        <button
+          onclick="toggleServiceForm('${sid}')"
+          class="w-full rounded-lg bg-forest px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition"
+        >Request this service</button>
+      `;
+    }
+
+    async function submitServiceRequest(sid) {
+      const btn = document.getElementById(`service-btn-${sid}`);
+      const notes = document.getElementById(`service-notes-${sid}`).value;
+
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      try {
+        await apiRequest('/orders', {
+          method: 'POST',
+          body: JSON.stringify({
+            entrepreneur_id: currentArtisan._id,
+            service_id: sid,
+            service_details: notes || "Bespoke service request",
+            notes: notes || null,
+            price: 0, // pricing finalized on dashboard / by artisan
+            name: getUser().business_name || getUser().email,
+            phone: "+91 99999 99999", // default placeholders
+            address: "Delivered digitally/via dashboard"
+          })
+        });
+
+        alert("Service request sent successfully! You can track it in your Dashboard.");
+        cancelServiceForm(sid);
+
+      } catch (err) {
+        alert("Failed to submit request: " + err.message);
+        btn.disabled = false;
+        btn.textContent = "Send request";
+      }
+    }
+
+    // 2. Render Product Card
+    function renderProductCard(p) {
+      const user = getUser();
+      const isLoggedIn = !!user;
+      const outOfStock = p.stock < 1;
+
+      return `
+        <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+          ${p.image_url ? `
+            <div class="aspect-square overflow-hidden bg-muted">
+              <img loading="lazy" src="${p.image_url}" alt="${p.title}" class="h-full w-full object-cover" />
+            </div>
+          ` : ''}
+          <div class="p-4">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-display text-base font-semibold leading-tight text-foreground">${p.title}</h3>
+              <span class="shrink-0 font-display text-base font-semibold text-primary">₹${Number(p.price).toLocaleString("en-IN")}</span>
+            </div>
+            ${p.description ? `<p class="mt-1 line-clamp-2 text-xs text-muted-foreground">${p.description}</p>` : ''}
+            
+            <div class="mt-3 flex items-center gap-2">
+              <input type="number" id="qty-${p._id}" min="1" max="${Math.min(p.stock, 20)}" value="1" class="w-16 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary" />
+              ${isLoggedIn ? `
+                <button
+                  id="buy-btn-${p._id}"
+                  onclick="buyProduct('${p._id}', ${p.price})"
+                  ${outOfStock ? 'disabled' : ''}
+                  class="flex-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition"
+                >${outOfStock ? 'Sold out' : 'Buy now'}</button>
+              ` : `
+                <a
+                  href="/auth.html?mode=login"
+                  class="flex-1 text-center block rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 transition"
+                >Sign in to buy</a>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function buyProduct(pid, price) {
+      const btn = document.getElementById(`buy-btn-${pid}`);
+      const qtyInput = document.getElementById(`qty-${pid}`);
+      const qty = parseInt(qtyInput.value) || 1;
+
+      btn.disabled = true;
+      btn.textContent = "Ordering...";
+
+      try {
+        await apiRequest('/orders', {
+          method: 'POST',
+          body: JSON.stringify({
+            entrepreneur_id: currentArtisan._id,
+            product_id: pid,
+            price: price * qty,
+            name: getUser().business_name || getUser().email,
+            phone: "+91 99999 99999", // placeholder phone number
+            address: "Collection point" // default placeholder
+          })
+        });
+
+        alert("Order placed successfully! Check your Dashboard to coordinate delivery.");
+        window.location.href = "/dashboard.html";
+
+      } catch (err) {
+        alert("Failed to place order: " + err.message);
+        btn.disabled = false;
+        btn.textContent = "Buy now";
+      }
+    }
+
+    // 3. Render Reviews Panel
+    function renderReviewsPanel(reviews) {
+      const user = getUser();
+      const isLoggedIn = !!user;
+
+      return `
+        <div class="rounded-2xl border border-border bg-card p-6 shadow-soft">
+          <h2 class="font-display text-xl font-semibold text-foreground">Reviews</h2>
+          <div class="divider-hand mt-3 text-primary"></div>
+          
+          ${isLoggedIn ? `
+            <div class="mt-4 rounded-xl bg-accent/30 p-4">
+              <p class="text-sm font-medium text-foreground">Leave a review</p>
+              <div class="mt-2 flex gap-1" id="star-selector">
+                ${[1, 2, 3, 4, 5].map(n => `
+                  <button type="button" onclick="setRating(${n})" id="star-select-${n}">
+                    <i data-lucide="star" class="h-6 w-6 fill-gold text-gold"></i>
+                  </button>
+                `).join('')}
+              </div>
+              <textarea id="review-comment" rows="2" placeholder="Share your experience…" class="mt-2 w-full rounded-lg border border-border bg-background p-2 text-sm text-foreground outline-none focus:border-primary"></textarea>
+              <button onclick="submitReview()" id="review-submit-btn" class="mt-2 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white hover:opacity-95 transition">Submit</button>
+            </div>
+          ` : `
+            <p class="mt-4 text-sm text-muted-foreground"><a href="/auth.html?mode=login" class="font-medium text-primary hover:underline">Sign in</a> to leave a review.</p>
+          `}
+          
+          <ul class="mt-6 space-y-4">
+            ${reviews.length === 0 ? `
+              <li class="text-sm text-muted-foreground">Be the first to leave a review.</li>
+            ` : reviews.map(r => `
+              <li class="border-b border-border/60 pb-4 last:border-none">
+                <div class="flex items-center gap-1">
+                  ${Array.from({ length: 5 }).map((_, i) => `
+                    <i data-lucide="star" class="h-3.5 w-3.5 ${i < r.rating ? 'fill-gold text-gold' : 'text-muted'}"></i>
+                  `).join('')}
+                  <span class="ml-2 text-xs text-muted-foreground font-semibold">${r.reviewer_name || 'Anonymous'}</span>
+                  <span class="ml-2 text-xs text-muted-foreground/75">${new Date(r.created_at).toLocaleDateString()}</span>
+                </div>
+                ${r.comment ? `<p class="mt-1.5 text-sm text-foreground/90">${r.comment}</p>` : ''}
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    function setRating(n) {
+      selectedRating = n;
+      for (let i = 1; i <= 5; i++) {
+        const starBtn = document.getElementById(`star-select-${i}`);
+        if (starBtn) {
+          if (i <= n) {
+            starBtn.innerHTML = `<i data-lucide="star" class="h-6 w-6 fill-gold text-gold"></i>`;
+          } else {
+            starBtn.innerHTML = `<i data-lucide="star" class="h-6 w-6 text-muted-foreground"></i>`;
+          }
+        }
+      }
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+
+    async function submitReview() {
+      const btn = document.getElementById('review-submit-btn');
+      const commentInput = document.getElementById('review-comment');
+      const comment = commentInput.value;
+
+      btn.disabled = true;
+      btn.textContent = "Submitting...";
+
+      try {
+        await apiRequest('/reviews', {
+          method: 'POST',
+          body: JSON.stringify({
+            entrepreneur_id: currentArtisan._id,
+            rating: selectedRating,
+            comment: comment || null
+          })
+        });
+
+        alert("Thank you for your review!");
+        loadProfile();
+
+      } catch (err) {
+        alert("Failed to submit review: " + err.message);
+        btn.disabled = false;
+        btn.textContent = "Submit";
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>

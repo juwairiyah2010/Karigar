@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Kaarigar</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'var(--background)',
+            foreground: 'var(--foreground)',
+            primary: 'var(--primary)',
+            forest: 'var(--forest)',
+            gold: 'var(--gold)',
+            cream: 'var(--cream)',
+            ink: 'var(--ink)',
+            border: 'var(--border)',
+            muted: 'var(--muted)',
+            'muted-foreground': 'var(--muted-foreground)',
+            card: 'var(--card)',
+            'card-foreground': 'var(--card-foreground)',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            warm: 'var(--shadow-warm)',
+            soft: 'var(--shadow-soft)',
+          },
+          backgroundImage: {
+            'gradient-warm': 'var(--gradient-warm)',
+            'gradient-cream': 'var(--gradient-cream)',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="/styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground font-sans min-h-screen flex flex-col justify-between">
+
+  <!-- Header -->
+  <header id="site-header"></header>
+
+  <!-- Admin Main Container -->
+  <main class="flex-1 mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col lg:flex-row gap-8">
+      
+      <!-- Left sidebar navigation -->
+      <aside class="w-full lg:w-64 shrink-0 space-y-2">
+        <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
+            <div class="h-10 w-10 rounded-xl bg-[#B54F2A]/10 flex items-center justify-center text-[#B54F2A]">
+              <i data-lucide="shield-check" class="h-5 w-5"></i>
+            </div>
+            <div>
+              <h2 class="font-serif font-bold text-gray-900 leading-tight">Admin Portal</h2>
+              <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Super Administrator</span>
+            </div>
+          </div>
+          
+          <nav class="space-y-1 flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-1 pb-2 lg:pb-0">
+            <button onclick="switchTab('analytics')" id="tab-analytics" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg w-full text-[#B54F2A] bg-amber-50 transition shrink-0">
+              <i data-lucide="bar-chart-2" class="h-4 w-4"></i> Analytics Overview
+            </button>
+            <button onclick="switchTab('entrepreneurs')" id="tab-entrepreneurs" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg w-full text-gray-500 hover:text-gray-900 transition shrink-0">
+              <i data-lucide="users" class="h-4 w-4"></i> Verify Artisans
+            </button>
+            <button onclick="switchTab('categories')" id="tab-categories" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg w-full text-gray-500 hover:text-gray-900 transition shrink-0">
+              <i data-lucide="tag" class="h-4 w-4"></i> Categories & Skills
+            </button>
+            <button onclick="switchTab('orders')" id="tab-orders" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg w-full text-gray-500 hover:text-gray-900 transition shrink-0">
+              <i data-lucide="shopping-bag" class="h-4 w-4"></i> Monitor Orders
+            </button>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Right Content View -->
+      <section class="flex-1 min-w-0 bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm">
+        
+        <!-- Tab Content: Analytics -->
+        <div id="content-analytics" class="space-y-8">
+          <div class="border-b border-gray-100 pb-4">
+            <h1 class="font-serif text-2xl font-bold text-gray-900">Platform Analytics</h1>
+            <p class="text-xs text-gray-500">Live operational overview of transactions, user acquisition, and listings.</p>
+          </div>
+          
+          <div id="analytics-loader" class="text-center py-20 text-gray-400">Loading analytics data...</div>
+          
+          <div id="analytics-data" class="hidden space-y-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-center">
+                <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Registered Artisans</span>
+                <span id="stat-artisans" class="font-serif text-xl font-bold text-gray-900 block mt-1">0</span>
+              </div>
+              <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-center">
+                <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Active Users</span>
+                <span id="stat-users" class="font-serif text-xl font-bold text-gray-900 block mt-1">0</span>
+              </div>
+              <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-center">
+                <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Service Conversion Rate</span>
+                <span id="stat-conversion" class="font-serif text-xl font-bold text-emerald-600 block mt-1">0%</span>
+              </div>
+              <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-center">
+                <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Product Sales Volume</span>
+                <span id="stat-sales-volume" class="font-serif text-xl font-bold text-gray-900 block mt-1">0 sold</span>
+              </div>
+              <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-center">
+                <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Avg Artisan Earnings</span>
+                <span id="stat-avg-earnings" class="font-serif text-xl font-bold text-[#B54F2A] block mt-1">₹0</span>
+              </div>
+              <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-center">
+                <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Customer Satisfaction</span>
+                <span id="stat-satisfaction" class="font-serif text-xl font-bold text-amber-500 block mt-1 flex items-center justify-center gap-1">
+                  <i data-lucide="star" class="h-4 w-4 fill-amber-500 text-amber-500"></i> 5.0
+                </span>
+              </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8 pt-4">
+              <!-- Users Breakdown -->
+              <div class="space-y-3">
+                <h3 class="font-serif font-bold text-base text-gray-900">User Role Distribution</h3>
+                <div class="border border-gray-100 rounded-2xl p-5 space-y-4">
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-semibold text-gray-600">
+                      <span>Customers (Patrons)</span>
+                      <span id="breakdown-customers">0</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                      <div id="bar-customers" class="bg-amber-500 h-full rounded-full" style="width: 0%"></div>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-semibold text-gray-600">
+                      <span>Artisans (Micro-Entrepreneurs)</span>
+                      <span id="breakdown-artisans">0</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                      <div id="bar-artisans" class="bg-emerald-600 h-full rounded-full" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Category distribution -->
+              <div class="space-y-3">
+                <h3 class="font-serif font-bold text-base text-gray-900">Artisan Categories</h3>
+                <div id="category-breakdown-container" class="border border-gray-100 rounded-2xl p-5 space-y-3">
+                  <!-- Injected dynamic breakdown -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Entrepreneurs (Verification) -->
+        <div id="content-entrepreneurs" class="hidden space-y-8">
+          <div class="border-b border-gray-100 pb-4">
+            <h1 class="font-serif text-2xl font-bold text-gray-900">Artisan Verification Portal</h1>
+            <p class="text-xs text-gray-500">Review, verify, and monitor micro-entrepreneurs on the platform.</p>
+          </div>
+          
+          <div id="entrepreneurs-container" class="space-y-4">
+            <!-- Injected entrepreneurs -->
+          </div>
+        </div>
+
+        <!-- Tab Content: Categories & Skills -->
+        <div id="content-categories" class="hidden space-y-8">
+          <div class="border-b border-gray-100 pb-4">
+            <h1 class="font-serif text-2xl font-bold text-gray-900">Manage Categories & Skills</h1>
+            <p class="text-xs text-gray-500">Configure marketplace taxonomy, review listed artisan skills/services.</p>
+          </div>
+          
+          <div class="grid md:grid-cols-12 gap-8">
+            <!-- Left: Add category form & List categories -->
+            <div class="md:col-span-6 space-y-6">
+              <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5 space-y-4">
+                <h3 class="font-serif font-bold text-gray-900 text-sm">Create New Category</h3>
+                <form id="add-category-form" class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Category Name</label>
+                    <input type="text" id="cat-name" required class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                    <textarea id="cat-desc" required rows="2" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]"></textarea>
+                  </div>
+                  <button type="submit" class="w-full bg-[#B54F2A] py-2 rounded-lg text-xs font-semibold text-white hover:bg-[#a04322] transition">
+                    Create Category
+                  </button>
+                </form>
+              </div>
+
+              <div class="space-y-3">
+                <h3 class="font-serif font-bold text-gray-900 text-sm">Active Categories</h3>
+                <div id="categories-list-container" class="space-y-2">
+                  <!-- Injected categories -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Moderate Skills/Services -->
+            <div class="md:col-span-6 space-y-4">
+              <h3 class="font-serif font-bold text-gray-900 text-sm">Moderate Listed Services & Skills</h3>
+              <div id="services-list-container" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                <!-- Injected services -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Orders & Disputes -->
+        <div id="content-orders" class="hidden space-y-8">
+          <div class="border-b border-gray-100 pb-4">
+            <h1 class="font-serif text-2xl font-bold text-gray-900">Monitor Orders & Disputes</h1>
+            <p class="text-xs text-gray-500">Track purchase transactions and resolve platform disputes / complaints.</p>
+          </div>
+          
+          <div id="orders-container" class="space-y-4">
+            <!-- Injected orders list -->
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer"></footer>
+
+  <!-- Central script -->
+  <script src="/app.js"></script>
+  <script>
+    let activeTab = 'analytics';
+
+    // Switch between dashboard panels
+    function switchTab(tabId) {
+      document.getElementById(`tab-${activeTab}`).className = "flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg w-full text-gray-500 hover:text-gray-900 transition shrink-0";
+      document.getElementById(`content-${activeTab}`).classList.add('hidden');
+      
+      activeTab = tabId;
+      
+      document.getElementById(`tab-${activeTab}`).className = "flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg w-full text-[#B54F2A] bg-amber-50 transition shrink-0";
+      document.getElementById(`content-${activeTab}`).classList.remove('hidden');
+
+      loadTabContent();
+    }
+
+    async function loadTabContent() {
+      if (activeTab === 'analytics') {
+        await loadAnalytics();
+      } else if (activeTab === 'entrepreneurs') {
+        await loadEntrepreneurs();
+      } else if (activeTab === 'categories') {
+        await loadCategoriesTab();
+      } else if (activeTab === 'orders') {
+        await loadOrdersTab();
+      }
+    }
+
+    // Tab 1: Analytics
+    async function loadAnalytics() {
+      const loader = document.getElementById('analytics-loader');
+      const dataDiv = document.getElementById('analytics-data');
+      loader.classList.remove('hidden');
+      dataDiv.classList.add('hidden');
+
+      try {
+        const stats = await apiRequest('/admin/analytics');
+        
+        document.getElementById('stat-artisans').textContent = stats.users.entrepreneurs;
+        document.getElementById('stat-users').textContent = stats.users.total;
+        document.getElementById('stat-conversion').textContent = `${Number(stats.serviceConversionRate).toFixed(1)}%`;
+        document.getElementById('stat-sales-volume').textContent = `${stats.productSalesVolume} sold`;
+        document.getElementById('stat-avg-earnings').textContent = `₹${Math.round(stats.avgArtisanEarnings).toLocaleString('en-IN')}`;
+        document.getElementById('stat-satisfaction').innerHTML = `
+          <i data-lucide="star" class="h-4 w-4 fill-amber-500 text-amber-500"></i> ${Number(stats.avgSatisfactionRating).toFixed(1)}
+        `;
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+        
+        document.getElementById('breakdown-customers').textContent = stats.users.customers;
+        document.getElementById('breakdown-artisans').textContent = stats.users.entrepreneurs;
+        
+        const customerPct = stats.users.total > 0 ? (stats.users.customers / stats.users.total) * 100 : 0;
+        const artisanPct = stats.users.total > 0 ? (stats.users.entrepreneurs / stats.users.total) * 100 : 0;
+        
+        document.getElementById('bar-customers').style.width = `${customerPct}%`;
+        document.getElementById('bar-artisans').style.width = `${artisanPct}%`;
+
+        // Category breakdown layout
+        const breakdownContainer = document.getElementById('category-breakdown-container');
+        breakdownContainer.innerHTML = stats.categoryBreakdown.map(c => `
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-gray-500">
+              <span class="font-medium">${c.name}</span>
+              <span>${c.count} active</span>
+            </div>
+            <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-[#B54F2A]/70 h-full rounded-full" style="width: ${stats.users.entrepreneurs > 0 ? (c.count / stats.users.entrepreneurs) * 100 : 0}%"></div>
+            </div>
+          </div>
+        `).join('');
+
+        loader.classList.add('hidden');
+        dataDiv.classList.remove('hidden');
+      } catch (err) {
+        loader.textContent = "Failed to load analytics: " + err.message;
+      }
+    }
+
+    // Tab 2: Approve / Verify Entrepreneurs
+    async function loadEntrepreneurs() {
+      const container = document.getElementById('entrepreneurs-container');
+      container.innerHTML = `<div class="text-center py-10 text-gray-400">Loading artisans...</div>`;
+
+      try {
+        const artisans = await apiRequest('/admin/entrepreneurs');
+        if (artisans.length === 0) {
+          container.innerHTML = `<div class="text-center py-10 text-gray-400">No registered artisans yet.</div>`;
+          return;
+        }
+
+        container.innerHTML = artisans.map(a => `
+          <div class="border border-gray-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <img src="${a.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}" class="h-12 w-12 rounded-xl object-cover bg-gray-50">
+              <div>
+                <h3 class="font-bold text-gray-900 text-sm flex items-center gap-1.5">
+                  ${a.business_name || 'Unnamed Business'}
+                  <span id="badge-${a._id}" class="${a.verified ? 'text-emerald-600' : 'text-gray-300'}">
+                    <i data-lucide="shield-check" class="h-4 w-4 fill-current"></i>
+                  </span>
+                </h3>
+                <p class="text-xs text-gray-500">${a.city || 'No city'}, ${a.state || 'No state'} &bull; ${a.email}</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <button onclick="toggleVerify('${a._id}', ${!a.verified})" class="px-4 py-2 border rounded-xl text-xs font-semibold shadow-sm transition hover:bg-gray-50 ${
+                a.verified ? 'border-red-200 text-red-600' : 'border-emerald-200 text-emerald-600'
+              }">
+                ${a.verified ? 'Revoke Verification' : 'Verify Artisan'}
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      } catch (err) {
+        container.innerHTML = `<div class="text-center py-10 text-red-500">Error: ${err.message}</div>`;
+      }
+    }
+
+    async function toggleVerify(id, nextState) {
+      try {
+        await apiRequest(`/admin/entrepreneurs/${id}/verify`, {
+          method: 'PATCH',
+          body: JSON.stringify({ verified: nextState })
+        });
+        alert(`Verification status updated successfully.`);
+        await loadEntrepreneurs();
+      } catch (err) {
+        alert("Failed to toggle verification: " + err.message);
+      }
+    }
+
+    // Tab 3: Categories & Skills
+    async function loadCategoriesTab() {
+      const catList = document.getElementById('categories-list-container');
+      const servList = document.getElementById('services-list-container');
+      
+      catList.innerHTML = `<div class="text-center py-4 text-gray-400 text-xs">Loading categories...</div>`;
+      servList.innerHTML = `<div class="text-center py-4 text-gray-400 text-xs">Loading skills...</div>`;
+
+      try {
+        // Fetch categories
+        const categories = await apiRequest('/categories');
+        catList.innerHTML = categories.map(c => `
+          <div class="flex items-center justify-between border border-gray-100 rounded-xl p-3 bg-gray-50/50">
+            <div>
+              <h4 class="font-bold text-xs text-gray-900">${c.name}</h4>
+              <p class="text-[10px] text-gray-500">${c.description || 'No description.'}</p>
+            </div>
+            <button onclick="deleteCategory('${c._id}')" class="text-gray-400 hover:text-red-600 transition p-1">
+              <i data-lucide="trash-2" class="h-4 w-4"></i>
+            </button>
+          </div>
+        `).join('');
+
+        // Fetch skills/services
+        const services = await apiRequest('/admin/services');
+        if (services.length === 0) {
+          servList.innerHTML = `<div class="text-center py-4 text-gray-400 text-xs">No services listed yet.</div>`;
+        } else {
+          servList.innerHTML = services.map(s => `
+            <div class="border border-gray-100 rounded-xl p-3 bg-white space-y-1">
+              <div class="flex justify-between items-start">
+                <h4 class="font-bold text-xs text-gray-900">${s.title}</h4>
+                <button onclick="deleteService('${s._id}')" class="text-gray-400 hover:text-red-600 transition p-1">
+                  <i data-lucide="trash-2" class="h-4 w-4"></i>
+                </button>
+              </div>
+              <p class="text-[10px] text-gray-500 leading-relaxed">${s.description || 'No description.'}</p>
+              <div class="flex justify-between items-center pt-1 text-[10px] font-semibold text-gray-400">
+                <span>Budget: ₹${s.price}</span>
+                <span>Duration: ${s.duration}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function deleteCategory(id) {
+      if (!confirm("Are you sure you want to delete this category?")) return;
+      try {
+        await apiRequest(`/admin/categories/${id}`, { method: 'DELETE' });
+        await loadCategoriesTab();
+      } catch (err) {
+        alert("Failed to delete category: " + err.message);
+      }
+    }
+
+    async function deleteService(id) {
+      if (!confirm("Are you sure you want to delete this service listing?")) return;
+      try {
+        await apiRequest(`/admin/services/${id}`, { method: 'DELETE' });
+        await loadCategoriesTab();
+      } catch (err) {
+        alert("Failed to delete service: " + err.message);
+      }
+    }
+
+    // Submit Handler: Add Category
+    document.getElementById('add-category-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('cat-name').value;
+      const description = document.getElementById('cat-desc').value;
+
+      try {
+        await apiRequest('/admin/categories', {
+          method: 'POST',
+          body: JSON.stringify({ name, description })
+        });
+        alert("Category created successfully!");
+        document.getElementById('add-category-form').reset();
+        await loadCategoriesTab();
+      } catch (err) {
+        alert("Failed to create category: " + err.message);
+      }
+    });
+
+    // Tab 4: Monitor Orders & Disputes
+    async function loadOrdersTab() {
+      const container = document.getElementById('orders-container');
+      container.innerHTML = `<div class="text-center py-10 text-gray-400">Loading orders...</div>`;
+
+      try {
+        const orders = await apiRequest('/admin/orders');
+        if (orders.length === 0) {
+          container.innerHTML = `<div class="text-center py-10 text-gray-400">No orders placed on the platform.</div>`;
+          return;
+        }
+
+        container.innerHTML = orders.map(o => `
+          <div class="border rounded-2xl p-5 bg-white space-y-4 ${
+            o.disputed ? 'border-red-200 bg-red-50/10' : 'border-gray-100'
+          }">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-semibold ${
+                    o.product_id ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
+                  }">
+                    ${o.product_id ? 'Product Order' : 'Custom Request'}
+                  </span>
+                  <span class="text-xs text-gray-400">${new Date(o.created_at).toLocaleDateString()}</span>
+                </div>
+                <h3 class="font-bold text-gray-900 mt-2 text-sm">
+                  Order ID: <span class="font-mono text-xs font-normal text-gray-500">${o._id}</span>
+                </h3>
+              </div>
+              
+              <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold border ${
+                o.disputed ? 'bg-red-100 border-red-200 text-red-800' : 'bg-gray-100 border-gray-200 text-gray-800'
+              }">
+                ${o.disputed ? 'DISPUTED' : o.status.toUpperCase()}
+              </span>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4 text-xs text-gray-600 bg-gray-50/50 p-4 rounded-xl">
+              <div class="space-y-1">
+                <div><strong>Patron (Buyer):</strong> ${o.name}</div>
+                <div><strong>Address:</strong> ${o.address}</div>
+              </div>
+              <div class="space-y-1">
+                <div><strong>Offered Budget:</strong> ₹${o.price}</div>
+                ${o.service_details ? `<div><strong>Details:</strong> ${o.service_details}</div>` : ''}
+              </div>
+            </div>
+
+            ${o.disputed ? `
+              <div class="border border-red-200 bg-red-50 rounded-xl p-4 space-y-3">
+                <div class="text-xs text-red-700">
+                  ⚠️ <strong>Dispute Filed:</strong> ${o.dispute_reason}
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="resolveDispute('${o._id}', 'completed')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">
+                    Resolve: Mark Completed
+                  </button>
+                  <button onclick="resolveDispute('${o._id}', 'refunded')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition">
+                    Resolve: Mark Refunded
+                  </button>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="text-center py-10 text-red-500">Failed to load orders: ${err.message}</div>`;
+      }
+    }
+
+    async function resolveDispute(orderId, resolutionStatus) {
+      if (!confirm(`Are you sure you want to resolve this dispute and mark the order as ${resolutionStatus}?`)) return;
+      try {
+        await apiRequest(`/admin/orders/${orderId}/resolve-dispute`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: resolutionStatus })
+        });
+        alert("Dispute resolved successfully.");
+        await loadOrdersTab();
+      } catch (err) {
+        alert("Failed to resolve dispute: " + err.message);
+      }
+    }
+
+    // Auth verification
+    async function checkAdminAuth() {
+      const user = getUser();
+      if (!user || user.role !== 'admin') {
+        window.location.href = "/auth.html?mode=login";
+        return;
+      }
+      loadTabContent();
+    }
+
+    document.addEventListener('DOMContentLoaded', checkAdminAuth);
+  </script>
+</body>
+</html>

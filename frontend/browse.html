@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Local Artisans — Kaarigar</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'var(--background)',
+            foreground: 'var(--foreground)',
+            primary: 'var(--primary)',
+            forest: 'var(--forest)',
+            gold: 'var(--gold)',
+            cream: 'var(--cream)',
+            ink: 'var(--ink)',
+            border: 'var(--border)',
+            muted: 'var(--muted)',
+            'muted-foreground': 'var(--muted-foreground)',
+            card: 'var(--card)',
+            'card-foreground': 'var(--card-foreground)',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            warm: 'var(--shadow-warm)',
+            soft: 'var(--shadow-soft)',
+          },
+          backgroundImage: {
+            'gradient-warm': 'var(--gradient-warm)',
+            'gradient-cream': 'var(--gradient-cream)',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="/styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground font-sans">
+
+  <!-- Header -->
+  <header id="site-header"></header>
+
+  <!-- Browse Header -->
+  <section class="border-b border-border/60 bg-gradient-cream">
+    <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <h1 class="font-display text-4xl font-semibold sm:text-5xl text-foreground">Browse artisans</h1>
+      <p class="mt-2 max-w-2xl text-muted-foreground">Verified craftspeople across India. Filter by craft or city, or search a specific skill.</p>
+
+      <div class="mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft sm:grid-cols-[1fr_auto]">
+        <div class="relative">
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+          <input
+            type="search"
+            id="search-q"
+            placeholder="Search 'block print', 'juttis', 'sherwani'…"
+            class="w-full rounded-lg border border-border bg-background pl-9 pr-3 py-2.5 text-sm outline-none focus:border-primary text-foreground"
+          />
+        </div>
+        <select
+          id="search-city"
+          class="rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+        >
+          <option value="">All cities</option>
+          <!-- Cities loaded dynamically -->
+        </select>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="mt-4 flex flex-wrap gap-2" id="category-chips">
+        <button
+          onclick="selectCategory('')"
+          id="chip-all"
+          class="rounded-full border px-4 py-1.5 text-sm transition border-primary bg-primary text-primary-foreground shadow-soft"
+        >All crafts</button>
+        <!-- Categories chips loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Artisans List -->
+  <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <p class="mb-6 text-sm text-muted-foreground" id="results-count">Loading artisans...</p>
+    
+    <div id="no-results" class="hidden rounded-2xl border border-dashed border-border p-16 text-center">
+      <p class="font-display text-xl text-foreground">No artisans match your filters yet.</p>
+      <p class="mt-2 text-sm text-muted-foreground font-sans">Try clearing filters or searching a different craft.</p>
+      <button onclick="clearFilters()" class="mt-6 inline-block rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-warm">Clear filters</button>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="artisans-list">
+      <!-- Artisan cards loaded dynamically -->
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="site-footer"></footer>
+
+  <!-- Central script -->
+  <script src="/app.js"></script>
+  <script>
+    let activeCategory = '';
+    let activeCity = '';
+    let searchQuery = '';
+    let allArtisans = [];
+    let categoriesList = [];
+
+    // Check if category is passed in URL query params
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    if (categoryParam) {
+      activeCategory = categoryParam;
+    }
+
+    async function initBrowse() {
+      try {
+        // Load categories and cities options
+        const [categories, artisans] = await Promise.all([
+          apiRequest('/categories'),
+          apiRequest('/artisans')
+        ]);
+        categoriesList = categories;
+        allArtisans = artisans;
+
+        renderCategoryChips();
+        renderCityDropdown();
+        filterAndRender();
+
+      } catch (err) {
+        console.error("Browse init error:", err);
+      }
+    }
+
+    function renderCategoryChips() {
+      const container = document.getElementById('category-chips');
+      if (!container) return;
+
+      container.innerHTML = `
+        <button
+          onclick="selectCategory('')"
+          id="chip-all"
+          class="rounded-full border px-4 py-1.5 text-sm transition ${!activeCategory ? 'border-primary bg-primary text-primary-foreground shadow-soft' : 'border-border bg-card hover:border-primary/40 text-foreground'}"
+        >All crafts</button>
+      ` + categoriesList.map(c => {
+        const active = activeCategory === c.slug;
+        return `
+          <button
+            onclick="selectCategory('${c.slug}')"
+            class="rounded-full border px-4 py-1.5 text-sm transition ${active ? 'border-primary bg-primary text-primary-foreground shadow-soft' : 'border-border bg-card hover:border-primary/40 text-foreground'}"
+          >${c.name}</button>
+        `;
+      }).join('');
+    }
+
+    function renderCityDropdown() {
+      const select = document.getElementById('search-city');
+      if (!select) return;
+
+      // Extract unique cities
+      const cities = Array.from(new Set(allArtisans.map(a => a.city).filter(Boolean))).sort();
+
+      select.innerHTML = `<option value="">All cities</option>` + cities.map(c => `
+        <option value="${c}" ${activeCity === c ? 'selected' : ''}>${c}</option>
+      `).join('');
+    }
+
+    function selectCategory(slug) {
+      activeCategory = slug;
+      renderCategoryChips();
+      filterAndRender();
+    }
+
+    function clearFilters() {
+      activeCategory = '';
+      activeCity = '';
+      searchQuery = '';
+      document.getElementById('search-q').value = '';
+      document.getElementById('search-city').value = '';
+      renderCategoryChips();
+      filterAndRender();
+    }
+
+    async function filterAndRender() {
+      const grid = document.getElementById('artisans-list');
+      const noResults = document.getElementById('no-results');
+      const countLabel = document.getElementById('results-count');
+      if (!grid) return;
+
+      // Filter local listings
+      let filtered = allArtisans;
+
+      if (activeCategory) {
+        const cat = categoriesList.find(c => c.slug === activeCategory);
+        if (cat) {
+          filtered = filtered.filter(a => String(a.category_id) === String(cat._id));
+        }
+      }
+
+      if (activeCity) {
+        filtered = filtered.filter(a => String(a.city).toLowerCase() === activeCity.toLowerCase());
+      }
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(a => 
+          a.business_name.toLowerCase().includes(q) || 
+          (a.bio && a.bio.toLowerCase().includes(q)) || 
+          a.city.toLowerCase().includes(q)
+        );
+      }
+
+      // Update count
+      countLabel.textContent = `${filtered.length} artisan${filtered.length === 1 ? '' : 's'} found`;
+
+      if (filtered.length === 0) {
+        grid.className = 'hidden';
+        noResults.classList.remove('hidden');
+        return;
+      }
+
+      noResults.classList.add('hidden');
+      grid.className = 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3';
+
+      grid.innerHTML = filtered.map(a => `
+        <a href="/artisan.html?id=${a._id}" class="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition hover:-translate-y-1 hover:shadow-warm">
+          <div class="relative aspect-[4/3] overflow-hidden bg-muted">
+            <img src="${a.cover_image || 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&q=80&w=600'}" alt="${a.business_name}" loading="lazy" class="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            ${a.category_name ? `
+              <span class="absolute left-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">
+                ${a.category_name}
+              </span>
+            ` : ''}
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-5">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-display text-lg font-semibold leading-tight text-foreground">
+                ${a.business_name}
+                ${a.verified ? `<i data-lucide="badge-check" class="ml-1 inline h-4 w-4 text-forest"></i>` : ''}
+              </h3>
+              <div class="flex shrink-0 items-center gap-1 text-sm">
+                <i data-lucide="star" class="h-4 w-4 fill-gold text-gold"></i>
+                <span class="font-medium text-foreground">${Number(a.rating_avg).toFixed(1)}</span>
+                <span class="text-muted-foreground">(${a.rating_count})</span>
+              </div>
+            </div>
+            <p class="line-clamp-2 text-sm text-muted-foreground">${a.bio || 'No bio provided.'}</p>
+            <div class="mt-auto flex items-center gap-1 pt-2 text-xs text-muted-foreground">
+              <i data-lucide="map-pin" class="h-3.5 w-3.5"></i>
+              ${[a.city, a.state].filter(Boolean).join(", ")}
+            </div>
+          </div>
+        </a>
+      `).join('');
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+
+    // Set up search bindings
+    document.getElementById('search-q').addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      filterAndRender();
+    });
+
+    document.getElementById('search-city').addEventListener('change', (e) => {
+      activeCity = e.target.value;
+      filterAndRender();
+    });
+
+    document.addEventListener('DOMContentLoaded', initBrowse);
+  </script>
+</body>
+</html>

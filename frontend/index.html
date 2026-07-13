@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaarigar — Discover Local Artisans & Craftspeople</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'var(--background)',
+            foreground: 'var(--foreground)',
+            primary: 'var(--primary)',
+            forest: 'var(--forest)',
+            gold: 'var(--gold)',
+            cream: 'var(--cream)',
+            ink: 'var(--ink)',
+            border: 'var(--border)',
+            muted: 'var(--muted)',
+            'muted-foreground': 'var(--muted-foreground)',
+            card: 'var(--card)',
+            'card-foreground': 'var(--card-foreground)',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            warm: 'var(--shadow-warm)',
+            soft: 'var(--shadow-soft)',
+          },
+          backgroundImage: {
+            'gradient-warm': 'var(--gradient-warm)',
+            'gradient-cream': 'var(--gradient-cream)',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="/styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground font-sans">
+
+  <!-- Header -->
+  <header id="site-header"></header>
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden">
+    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
+      <div class="flex flex-col justify-center">
+        <span class="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-medium text-forest shadow-soft">
+          <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> A home for India's makers
+        </span>
+        <h1 class="mt-6 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+          Discover the <em class="not-italic text-primary">hands</em> behind every craft.
+        </h1>
+        <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
+          Kaarigar connects you directly with local cobblers, potters, tailors, and artisans. Book their skills, buy their handmade work — and put more of your money into the maker's hands.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="/browse.html" class="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-medium text-primary-foreground shadow-warm transition hover:opacity-90">
+            Explore artisans <i data-lucide="arrow-right" class="h-4 w-4"></i>
+          </a>
+          <a href="/auth.html?mode=signup" class="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-base font-medium text-foreground hover:bg-accent transition">
+            I'm an artisan
+          </a>
+        </div>
+        <div class="mt-10 flex items-center gap-8 text-sm text-muted-foreground">
+          <div><div class="font-display text-2xl font-semibold text-foreground">500+</div>Verified artisans</div>
+          <div class="h-10 w-px bg-border"></div>
+          <div><div class="font-display text-2xl font-semibold text-foreground">40+</div>Cities across India</div>
+          <div class="h-10 w-px bg-border"></div>
+          <div><div class="font-display text-2xl font-semibold text-foreground">4.8★</div>Average rating</div>
+        </div>
+      </div>
+
+      <div class="relative">
+        <div class="absolute -right-8 -top-8 hidden h-72 w-72 rounded-full bg-gold/30 blur-3xl lg:block"></div>
+        <div class="absolute -bottom-8 -left-8 hidden h-72 w-72 rounded-full bg-primary/25 blur-3xl lg:block"></div>
+        <div class="relative overflow-hidden rounded-3xl border border-border shadow-warm">
+          <img src="/assets/hero-potter.jpg" alt="Potter at wheel shaping clay" class="h-full w-full object-cover">
+        </div>
+        <div class="absolute -bottom-4 left-4 hidden max-w-[220px] rounded-2xl border border-border bg-card p-4 shadow-warm sm:block">
+          <p class="font-display text-sm font-semibold text-foreground">Ramji, Potter</p>
+          <p class="text-xs text-muted-foreground">Khurja · 22 yrs · 4.85 ★</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 border-t border-border/40">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <p class="text-sm font-medium uppercase tracking-wider text-primary">Browse by craft</p>
+        <h2 class="mt-2 font-display text-3xl font-semibold sm:text-4xl text-foreground">Five crafts, thousands of stories</h2>
+      </div>
+      <a href="/browse.html" class="hidden text-sm font-medium text-primary hover:underline sm:inline">See all →</a>
+    </div>
+    
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-5" id="categories-grid">
+      <!-- Loaded dynamically with local image assets -->
+    </div>
+  </section>
+
+  <!-- Featured Artisans Section -->
+  <section class="bg-gradient-cream">
+    <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <p class="text-sm font-medium uppercase tracking-wider text-primary">Featured artisans</p>
+          <h2 class="mt-2 font-display text-3xl font-semibold sm:text-4xl text-foreground">Meet the makers</h2>
+        </div>
+        <a href="/browse.html" class="hidden text-sm font-medium text-primary hover:underline sm:inline">Browse all →</a>
+      </div>
+      
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="featured-artisans-list">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Teaser Section -->
+  <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="grid gap-10 lg:grid-cols-3">
+      <!-- Step 1 -->
+      <div class="relative rounded-2xl border border-border bg-card p-8 shadow-soft">
+        <span class="absolute -top-4 left-6 grid h-9 w-9 place-items-center rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground">1</span>
+        <i data-lucide="sparkles" class="h-8 w-8 text-primary"></i>
+        <h3 class="mt-4 font-display text-xl font-semibold text-foreground">Discover</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Browse verified artisans by craft, city, or search a specific skill.</p>
+      </div>
+      <!-- Step 2 -->
+      <div class="relative rounded-2xl border border-border bg-card p-8 shadow-soft">
+        <span class="absolute -top-4 left-6 grid h-9 w-9 place-items-center rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground">2</span>
+        <i data-lucide="handshake" class="h-8 w-8 text-primary"></i>
+        <h3 class="mt-4 font-display text-xl font-semibold text-foreground">Connect</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Send a service request or place an order directly with the maker.</p>
+      </div>
+      <!-- Step 3 -->
+      <div class="relative rounded-2xl border border-border bg-card p-8 shadow-soft">
+        <span class="absolute -top-4 left-6 grid h-9 w-9 place-items-center rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground">3</span>
+        <i data-lucide="heart-handshake" class="h-8 w-8 text-primary"></i>
+        <h3 class="mt-4 font-display text-xl font-semibold text-foreground">Support</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Pay a fair price, leave a review, and help build sustainable local livelihoods.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Impact Strip -->
+  <section class="border-y border-border/60 bg-forest text-primary-foreground">
+    <div class="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:grid-cols-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <div class="font-display text-3xl font-semibold text-gold">₹1.2 Cr+</div>
+        <div class="mt-1 text-xs opacity-90">paid directly to artisans</div>
+      </div>
+      <div class="text-center">
+        <div class="font-display text-3xl font-semibold text-gold">4,800+</div>
+        <div class="mt-1 text-xs opacity-90">orders fulfilled</div>
+      </div>
+      <div class="text-center">
+        <div class="font-display text-3xl font-semibold text-gold">96%</div>
+        <div class="mt-1 text-xs opacity-90">of earnings stay with the maker</div>
+      </div>
+      <div class="text-center">
+        <div class="font-display text-3xl font-semibold text-gold">0</div>
+        <div class="mt-1 text-xs opacity-90">middlemen</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-warm p-10 shadow-warm sm:p-16">
+      <div class="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-gold/30 blur-3xl"></div>
+      <div class="relative grid gap-6 lg:grid-cols-2 lg:items-center">
+        <div>
+          <i data-lucide="shield-check" class="h-8 w-8 text-primary-foreground/90"></i>
+          <h2 class="mt-4 font-display text-3xl font-semibold text-primary-foreground sm:text-4xl">
+            Are you a maker? Let more people find you.
+          </h2>
+          <p class="mt-3 max-w-xl text-primary-foreground/85">
+            Create a free profile in minutes. List your services and products, accept requests, and grow your business — no middlemen, no commissions taken from you.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3 lg:justify-end">
+          <a href="/auth.html?mode=signup" class="inline-flex items-center gap-2 rounded-lg bg-background px-6 py-3 text-base font-medium text-foreground shadow-soft hover:opacity-95 transition">
+            Join as an artisan <i data-lucide="arrow-right" class="h-4 w-4"></i>
+          </a>
+          <a href="/how-it-works.html" class="inline-flex items-center gap-2 rounded-lg border border-primary-foreground/30 bg-transparent px-6 py-3 text-base font-medium text-primary-foreground hover:bg-primary-foreground/10 transition">
+            How it works
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="site-footer"></footer>
+
+  <!-- Central script -->
+  <script src="/app.js"></script>
+  <script>
+    // Load categories dynamically from MongoDB
+    async function loadCategories() {
+      try {
+        const categories = await apiRequest('/categories');
+        const container = document.getElementById('categories-grid');
+        if (!container) return;
+
+        container.innerHTML = categories.map(c => `
+          <a href="/browse.html?category=${c.slug}" class="group relative aspect-[3/4] overflow-hidden rounded-2xl border border-border shadow-soft transition hover:-translate-y-1 hover:shadow-warm">
+            <img src="/assets/cat-${c.slug}.jpg" alt="${c.name}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/20 to-transparent"></div>
+            <div class="absolute inset-x-4 bottom-4 text-primary-foreground">
+              <h3 class="font-display text-xl font-semibold">${c.name}</h3>
+              <p class="mt-1 text-xs opacity-90 line-clamp-2">${c.description}</p>
+            </div>
+          </a>
+        `).join('');
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      } catch (err) {
+        console.error("Error loading categories:", err);
+      }
+    }
+
+    // Load featured artisans
+    async function loadFeaturedArtisans() {
+      try {
+        const artisans = await apiRequest('/artisans');
+        const container = document.getElementById('featured-artisans-list');
+        if (!container) return;
+
+        // Display up to 6 featured artisans sorted by rating
+        const featured = artisans.slice(0, 6);
+
+        container.innerHTML = featured.map(a => `
+          <a href="/artisan.html?id=${a._id}" class="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition hover:-translate-y-1 hover:shadow-warm">
+            <div class="relative aspect-[4/3] overflow-hidden bg-muted">
+              <img src="${a.cover_image || 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&q=80&w=600'}" alt="${a.business_name}" loading="lazy" class="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+              ${a.category_name ? `
+                <span class="absolute left-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">
+                  ${a.category_name}
+                </span>
+              ` : ''}
+            </div>
+            <div class="flex flex-1 flex-col gap-2 p-5">
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="font-display text-lg font-semibold leading-tight text-foreground">
+                  ${a.business_name}
+                  ${a.verified ? `<i data-lucide="badge-check" class="ml-1 inline h-4 w-4 text-forest"></i>` : ''}
+                </h3>
+                <div class="flex shrink-0 items-center gap-1 text-sm">
+                  <i data-lucide="star" class="h-4 w-4 fill-gold text-gold"></i>
+                  <span class="font-medium text-foreground">${Number(a.rating_avg).toFixed(1)}</span>
+                  <span class="text-muted-foreground">(${a.rating_count})</span>
+                </div>
+              </div>
+              <p class="line-clamp-2 text-sm text-muted-foreground">${a.bio || 'No bio provided.'}</p>
+              <div class="mt-auto flex items-center gap-1 pt-2 text-xs text-muted-foreground">
+                <i data-lucide="map-pin" class="h-3.5 w-3.5"></i>
+                ${[a.city, a.state].filter(Boolean).join(", ")}
+              </div>
+            </div>
+          </a>
+        `).join('');
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      } catch (err) {
+        console.error("Error loading featured artisans:", err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCategories();
+      loadFeaturedArtisans();
+    });
+  </script>
+</body>
+</html>

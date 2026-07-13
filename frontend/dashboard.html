@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Kaarigar</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'var(--background)',
+            foreground: 'var(--foreground)',
+            primary: 'var(--primary)',
+            forest: 'var(--forest)',
+            gold: 'var(--gold)',
+            cream: 'var(--cream)',
+            ink: 'var(--ink)',
+            border: 'var(--border)',
+            muted: 'var(--muted)',
+            'muted-foreground': 'var(--muted-foreground)',
+            card: 'var(--card)',
+            'card-foreground': 'var(--card-foreground)',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            warm: 'var(--shadow-warm)',
+            soft: 'var(--shadow-soft)',
+          },
+          backgroundImage: {
+            'gradient-warm': 'var(--gradient-warm)',
+            'gradient-cream': 'var(--gradient-cream)',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="/styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground font-sans">
+
+  <!-- Header -->
+  <header id="site-header"></header>
+
+  <!-- Dashboard Container -->
+  <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <div id="dashboard-content" class="space-y-8">
+      <!-- Loaded dynamically -->
+      <div class="text-center py-20 text-gray-500 animate-pulse">
+        Loading dashboard...
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer"></footer>
+
+  <!-- Central script -->
+  <script src="/app.js"></script>
+  <script>
+    let user = null;
+
+    async function checkAuthAndLoad() {
+      user = getUser();
+      if (!user) {
+        window.location.href = "/auth.html?mode=login";
+        return;
+      }
+
+      if (user.role === 'admin') {
+        window.location.href = "/admin.html";
+        return;
+      }
+
+      if (user.role === 'entrepreneur') {
+        await loadArtisanDashboard();
+      } else {
+        await loadCustomerDashboard();
+      }
+    }
+
+    // ARTISAN DASHBOARD
+    async function loadArtisanDashboard() {
+      const container = document.getElementById('dashboard-content');
+      try {
+        const orders = await apiRequest('/orders');
+        const artisanDetails = await apiRequest(`/artisans/${user.id}`);
+        const products = artisanDetails.products || [];
+        const servicesList = artisanDetails.services || [];
+
+        // Earnings calculations
+        const completedOrders = orders.filter(o => o.status === 'completed');
+        const totalEarnings = completedOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+        const pendingOrders = orders.filter(o => o.status === 'accepted' || o.status === 'pending');
+        const pendingEarnings = pendingOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+
+        container.innerHTML = `
+          <!-- Header and Stats -->
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-gray-200 pb-6">
+            <div>
+              <h1 class="font-serif text-3xl font-bold text-gray-900">Artisan Dashboard</h1>
+              <p class="text-sm text-gray-500">Manage your craft products, catalog, and patron order requests.</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-4">
+              <div class="bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm text-center">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Earnings (Completed)</span>
+                <span class="font-serif text-lg font-bold text-emerald-600 block mt-0.5">₹${totalEarnings.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm text-center">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pending Earnings</span>
+                <span class="font-serif text-lg font-bold text-amber-600 block mt-0.5">₹${pendingEarnings.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm text-center">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Average Rating</span>
+                <span class="font-serif text-lg font-bold text-gray-900 flex items-center justify-center gap-1 mt-0.5">
+                  <i data-lucide="star" class="h-4 w-4 fill-amber-500 text-amber-500"></i> ${Number(artisanDetails.entrepreneur.rating_avg || 5.0).toFixed(1)}
+                </span>
+              </div>
+              <div class="bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm text-center">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Reviews</span>
+                <span class="font-serif text-lg font-bold text-gray-900 block mt-0.5">${artisanDetails.entrepreneur.rating_count || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Grid -->
+          <div class="grid gap-10 lg:grid-cols-12">
+            
+            <!-- Left Panel: Incoming Orders & Requests -->
+            <div class="lg:col-span-8 space-y-6">
+              <h2 class="font-serif text-2xl font-bold text-gray-900">Incoming Patron Requests</h2>
+              
+              ${orders.length === 0 ? `
+                <div class="bg-white border border-gray-100 rounded-2xl p-8 text-center text-gray-500 text-sm shadow-sm">
+                  No orders or custom service requests placed yet.
+                </div>
+              ` : `
+                <div class="space-y-4">
+                  ${orders.map(o => `
+                    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
+                      <div class="flex items-start justify-between gap-4">
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-semibold ${
+                              o.product_id ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
+                            }">
+                              <i data-lucide="${o.product_id ? 'package' : 'sparkles'}" class="h-3.5 w-3.5"></i>
+                              ${o.product_id ? 'Product Order' : 'Custom Request'}
+                            </span>
+                            <span class="text-xs text-gray-400">${new Date(o.created_at).toLocaleDateString()}</span>
+                          </div>
+                          
+                          <h3 class="font-bold text-gray-900 mt-2 text-base">
+                            ${o.product_id ? 'Purchase Request' : 'Bespoke Order'}
+                          </h3>
+                        </div>
+
+                        <!-- Status Badge and Selector -->
+                        <div class="flex items-center gap-2">
+                          <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold border ${getStatusBadgeClass(o.status)}">
+                            ${o.status.toUpperCase()}
+                          </span>
+                          
+                          <select onchange="updateOrderStatus('${o._id}', this.value)" class="border border-gray-200 rounded-lg px-2 py-1 text-xs bg-white text-gray-600 outline-none">
+                            <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="accepted" ${o.status === 'accepted' ? 'selected' : ''}>Accept</option>
+                            <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Complete</option>
+                            <option value="rejected" ${o.status === 'rejected' ? 'selected' : ''}>Reject</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="text-xs text-gray-600 space-y-1.5 bg-amber-50/10 p-3 rounded-lg border border-amber-50/50">
+                        ${o.service_details ? `<div><strong>Specifications:</strong> ${o.service_details}</div>` : ''}
+                        <div><strong>Patron Name:</strong> ${o.name}</div>
+                        <div><strong>Phone:</strong> ${o.phone}</div>
+                        <div><strong>Delivery Address:</strong> ${o.address}</div>
+                        <div class="text-sm font-semibold text-gray-900 pt-1">Offer Price: ₹${o.price}</div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+            </div>
+
+            <!-- Right Panel: Profile & Catalog -->
+            <div class="lg:col-span-4 space-y-6">
+              
+              <!-- Profile Panel -->
+              <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
+                <h3 class="font-serif text-lg font-bold text-gray-900">My Artisan Profile</h3>
+                <div id="profile-view-mode" class="space-y-3 text-xs text-gray-600">
+                  <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
+                    <img src="${artisanDetails.entrepreneur.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80'}" alt="Profile Photo" class="h-14 w-14 rounded-full object-cover border-2 border-amber-500/20">
+                    <div>
+                      <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Artisan Account</span>
+                      <h4 class="font-serif text-sm font-bold text-gray-900 leading-tight">${artisanDetails.entrepreneur.business_name || 'Artisan'}</h4>
+                    </div>
+                  </div>
+                  <div><strong>Category:</strong> <span class="text-gray-950 font-medium">${artisanDetails.entrepreneur.category_name || 'Handicrafts'}</span></div>
+                  <div><strong>Phone:</strong> <span class="text-gray-950 font-medium">${artisanDetails.entrepreneur.contact_phone || 'Not set'}</span></div>
+                  <div><strong>Location:</strong> <span class="text-gray-950 font-medium">${artisanDetails.entrepreneur.city || 'Not set'}${artisanDetails.entrepreneur.state ? ', ' + artisanDetails.entrepreneur.state : ''}</span></div>
+                  <div><strong>Availability Status:</strong> <span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold ${artisanDetails.entrepreneur.available !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}">${artisanDetails.entrepreneur.available !== false ? 'Accepting Requests' : 'Not Accepting Requests'}</span></div>
+                  <div><strong>Biography:</strong> <p class="mt-1 text-gray-500 font-sans leading-relaxed">${artisanDetails.entrepreneur.bio || 'No biography written yet.'}</p></div>
+                  <button onclick="toggleProfileEdit(true)" class="w-full mt-4 border border-border py-2 rounded-lg text-xs font-semibold hover:bg-accent text-foreground transition">
+                    Edit Profile Details
+                  </button>
+                </div>
+                <form id="profile-edit-form" class="hidden space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Profile Photo (PNG or JPG)</label>
+                    <div class="flex items-center gap-2">
+                      <input type="file" id="edit-avatar-file" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-[#B54F2A] hover:file:bg-amber-100 transition">
+                      <input type="hidden" id="edit-avatar" value="${artisanDetails.entrepreneur.avatar || ''}">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Business Name</label>
+                    <input type="text" id="edit-biz-name" value="${artisanDetails.entrepreneur.business_name || ''}" required class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Contact Phone</label>
+                    <input type="text" id="edit-phone" value="${artisanDetails.entrepreneur.contact_phone || ''}" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">City</label>
+                      <input type="text" id="edit-city" value="${artisanDetails.entrepreneur.city || ''}" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">State</label>
+                      <input type="text" id="edit-state" value="${artisanDetails.entrepreneur.state || ''}" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 py-1">
+                    <input type="checkbox" id="edit-available" ${artisanDetails.entrepreneur.available !== false ? 'checked' : ''} class="h-4 w-4 rounded border-gray-200 text-[#B54F2A] focus:ring-[#B54F2A]">
+                    <label for="edit-available" class="text-xs font-semibold text-gray-600">Available for Custom Requests</label>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Biography</label>
+                    <textarea id="edit-bio" rows="3" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">${artisanDetails.entrepreneur.bio || ''}</textarea>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="button" onclick="toggleProfileEdit(false)" class="w-1/2 border border-border py-2 rounded-lg text-xs font-semibold hover:bg-accent text-foreground transition">
+                      Cancel
+                    </button>
+                    <button type="submit" class="w-1/2 bg-[#B54F2A] py-2 rounded-lg text-xs font-semibold text-white hover:bg-[#a04322] transition">
+                      Save Profile
+                    </button>
+                  </div>
+                </form>
+              </div>
+              
+              <!-- Form to add catalog items -->
+              <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
+                <div class="flex border-b border-gray-100 pb-1">
+                  <button type="button" id="tab-add-product" onclick="switchFormTab('product')" class="flex-1 pb-2 text-xs font-semibold border-b-2 border-[#B54F2A] text-gray-900 transition">
+                    Add Product
+                  </button>
+                  <button type="button" id="tab-add-service" onclick="switchFormTab('service')" class="flex-1 pb-2 text-xs font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-900 transition">
+                    Add Service
+                  </button>
+                </div>
+                
+                <!-- Product Form -->
+                <form id="add-product-form" class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Product Title</label>
+                    <input type="text" id="p-title" required class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Price (₹)</label>
+                    <input type="number" id="p-price" required min="1" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Image URL (Optional)</label>
+                    <input type="url" id="p-image" placeholder="https://..." class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Stock Quantity</label>
+                    <input type="number" id="p-stock" required min="1" value="1" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                    <textarea id="p-desc" required rows="2" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]"></textarea>
+                  </div>
+                  <button type="submit" class="w-full bg-[#B54F2A] py-2 rounded-lg text-xs font-semibold text-white hover:bg-[#a04322] transition">
+                    Publish Product
+                  </button>
+                </form>
+
+                <!-- Service Form -->
+                <form id="add-service-form" class="hidden space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Service Title</label>
+                    <input type="text" id="s-title" required class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">Price (₹)</label>
+                      <input type="number" id="s-price" required min="1" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">Duration (e.g. 1h)</label>
+                      <input type="text" id="s-duration" placeholder="1 hour" required class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                    <textarea id="s-desc" required rows="2" placeholder="Tell customers what skills you teach or what is included..." class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]"></textarea>
+                  </div>
+                  <button type="submit" class="w-full bg-[#B54F2A] py-2 rounded-lg text-xs font-semibold text-white hover:bg-[#a04322] transition">
+                    Publish Service
+                  </button>
+                </form>
+              </div>
+
+              <!-- Catalog list preview -->
+              <h3 class="font-serif text-lg font-bold text-gray-900 pt-2">Your Catalog Preview</h3>
+              <div class="space-y-4">
+                <div>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Products</span>
+                  <div class="space-y-2">
+                    ${products.length === 0 ? `
+                      <div class="text-center text-xs text-gray-400 py-2 bg-gray-50/50 rounded-xl">No published products yet.</div>
+                    ` : products.map(p => `
+                      <div class="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex gap-3">
+                        <img src="${p.image_url}" alt="${p.title}" class="h-10 w-10 rounded object-cover bg-gray-50 flex-shrink-0">
+                        <div class="min-w-0 flex-1">
+                          <h4 class="font-semibold text-xs text-gray-900 truncate">${p.title}</h4>
+                          <p class="text-xs font-semibold text-[#B54F2A] mt-0.5">₹${p.price}</p>
+                          <p class="text-[10px] text-gray-400">Stock: ${p.stock}</p>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Services / Skills</span>
+                  <div class="space-y-2">
+                    ${servicesList.length === 0 ? `
+                      <div class="text-center text-xs text-gray-400 py-2 bg-gray-50/50 rounded-xl">No services published yet.</div>
+                    ` : servicesList.map(s => `
+                      <div class="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                        <div class="flex justify-between items-start">
+                          <h4 class="font-semibold text-xs text-gray-900 truncate">${s.title}</h4>
+                          <span class="text-[10px] text-gray-400">${s.duration}</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                          <p class="text-xs font-semibold text-[#B54F2A]">₹${s.price}</p>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        `;
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+
+        // Bind forms
+        document.getElementById('add-product-form').addEventListener('submit', handleAddProduct);
+        document.getElementById('profile-edit-form').addEventListener('submit', handleProfileSubmit);
+        document.getElementById('add-service-form').addEventListener('submit', handleAddService);
+        const fileInput = document.getElementById('edit-avatar-file');
+        if (fileInput) {
+          fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+              document.getElementById('edit-avatar').value = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="text-center py-20 text-red-500">Failed to load dashboard. ${err.message}</div>`;
+      }
+    }
+
+    // CUSTOMER DASHBOARD
+    async function loadCustomerDashboard() {
+      const container = document.getElementById('dashboard-content');
+      try {
+        const [orders, meResponse] = await Promise.all([
+          apiRequest('/orders'),
+          apiRequest('/auth/me')
+        ]);
+        const patron = meResponse.user;
+
+        container.innerHTML = `
+          <div class="border-b border-gray-200 pb-6">
+            <h1 class="font-serif text-3xl font-bold text-gray-900">Patron Dashboard</h1>
+            <p class="text-sm text-gray-500">Track your custom craft requests and orders placed with local artisans.</p>
+          </div>
+
+          <div class="grid gap-10 lg:grid-cols-12">
+            <!-- Left Panel: Requests -->
+            <div class="lg:col-span-8 space-y-6">
+              <h2 class="font-serif text-2xl font-bold text-gray-900">Your Purchase & Service Requests</h2>
+              
+              ${orders.length === 0 ? `
+                <div class="bg-white border border-gray-100 rounded-2xl p-8 text-center text-gray-500 text-sm shadow-sm">
+                  You haven't ordered any crafts or custom services yet. 
+                  <a href="/browse.html" class="text-[#B54F2A] font-semibold hover:underline block mt-2">Explore Artisans now</a>
+                </div>
+              ` : `
+                <div class="grid gap-6 md:grid-cols-2">
+                  ${orders.map(o => `
+                    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
+                      <div class="flex items-start justify-between gap-4">
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-semibold ${
+                              o.product_id ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
+                            }">
+                              <i data-lucide="${o.product_id ? 'package' : 'sparkles'}" class="h-3.5 w-3.5"></i>
+                              ${o.product_id ? 'Product Order' : 'Custom Request'}
+                            </span>
+                            <span class="text-xs text-gray-400">${new Date(o.created_at).toLocaleDateString()}</span>
+                          </div>
+                          
+                          <h3 class="font-bold text-gray-900 mt-2 text-base">
+                            ${o.product_id ? 'Catalog Purchase' : 'Bespoke Design Request'}
+                          </h3>
+                        </div>
+
+                        <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold border ${getStatusBadgeClass(o.status)}">
+                          ${o.status.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div class="text-xs text-gray-600 space-y-1.5 bg-amber-50/10 p-3 rounded-lg border border-amber-50/50">
+                        ${o.service_details ? `<div><strong>Your Instructions:</strong> ${o.service_details}</div>` : ''}
+                        <div><strong>Deliver to:</strong> ${o.name}</div>
+                        <div><strong>Address:</strong> ${o.address}</div>
+                        <div class="text-sm font-semibold text-gray-900 pt-1">Price / Offered Budget: ₹${o.price}</div>
+                        
+                        ${o.disputed ? `
+                          <div class="mt-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded p-2 font-medium animate-pulse">
+                            🚨 <strong>Disputed:</strong> ${o.dispute_reason}
+                          </div>
+                        ` : `
+                          <div class="mt-2 flex items-center justify-between gap-2">
+                            ${(o.status === 'completed' && !o.reviewed) ? `
+                              <button onclick="writeOrderReview('${o._id}', '${o.entrepreneur_id}')" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-semibold hover:bg-emerald-700 transition">
+                                Write Review
+                              </button>
+                            ` : ''}
+                            <button onclick="openOrderDispute('${o._id}')" class="text-[10px] text-red-600 font-semibold hover:underline ml-auto">
+                              Report Dispute / Complaint
+                            </button>
+                          </div>
+                        `}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+            </div>
+
+            <!-- Right Panel: Profile -->
+            <div class="lg:col-span-4 space-y-6">
+              <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4" id="profile-card-container">
+                <h3 class="font-serif text-lg font-bold text-gray-900">My Profile</h3>
+                <div id="profile-view-mode" class="space-y-3 text-xs text-gray-600">
+                  <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
+                    <img src="${patron.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80'}" alt="Profile Photo" class="h-14 w-14 rounded-full object-cover border-2 border-amber-500/20">
+                    <div>
+                      <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Patron Account</span>
+                      <h4 class="font-serif text-sm font-bold text-gray-900 leading-tight">${patron.business_name || 'Customer'}</h4>
+                    </div>
+                  </div>
+                  <div><strong>Email:</strong> <span class="text-gray-950 font-medium">${patron.email}</span></div>
+                  <div><strong>Phone:</strong> <span class="text-gray-950 font-medium">${patron.contact_phone || 'Not set'}</span></div>
+                  <div><strong>Location:</strong> <span class="text-gray-950 font-medium">${patron.city || 'Not set'}${patron.state ? ', ' + patron.state : ''}</span></div>
+                  <button onclick="toggleProfileEdit(true)" class="w-full mt-4 border border-border py-2 rounded-lg text-xs font-semibold hover:bg-accent text-foreground transition">
+                    Edit Profile Details
+                  </button>
+                </div>
+                <form id="profile-edit-form" class="hidden space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Profile Photo (PNG or JPG)</label>
+                    <div class="flex items-center gap-2">
+                      <input type="file" id="edit-avatar-file" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-[#B54F2A] hover:file:bg-amber-100 transition">
+                      <input type="hidden" id="edit-avatar" value="${patron.avatar || ''}">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Your Name</label>
+                    <input type="text" id="edit-biz-name" value="${patron.business_name || ''}" required class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Contact Phone</label>
+                    <input type="text" id="edit-phone" value="${patron.contact_phone || ''}" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">City</label>
+                      <input type="text" id="edit-city" value="${patron.city || ''}" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">State</label>
+                      <input type="text" id="edit-state" value="${patron.state || ''}" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#B54F2A]">
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="button" onclick="toggleProfileEdit(false)" class="w-1/2 border border-border py-2 rounded-lg text-xs font-semibold hover:bg-accent text-foreground transition">
+                      Cancel
+                    </button>
+                    <button type="submit" class="w-1/2 bg-[#B54F2A] py-2 rounded-lg text-xs font-semibold text-white hover:bg-[#a04322] transition">
+                      Save Profile
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        `;
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+        
+        // Bind forms
+        document.getElementById('profile-edit-form').addEventListener('submit', handleProfileSubmit);
+        const fileInput = document.getElementById('edit-avatar-file');
+        if (fileInput) {
+          fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+              document.getElementById('edit-avatar').value = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="text-center py-20 text-red-500">Failed to load dashboard. ${err.message}</div>`;
+      }
+    }
+
+    // Helper functions
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+        case 'accepted': return 'bg-blue-50 text-blue-700 border-blue-200';
+        case 'completed': return 'bg-green-50 text-green-700 border-green-200';
+        case 'rejected': return 'bg-red-50 text-red-700 border-red-200';
+        default: return 'bg-gray-50 text-gray-700 border-gray-200';
+      }
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      try {
+        await apiRequest(`/orders/${orderId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: newStatus })
+        });
+        alert("Order status updated successfully!");
+        loadArtisanDashboard();
+      } catch (err) {
+        alert(`Failed to update status: ${err.message}`);
+      }
+    }
+
+    async function handleAddProduct(e) {
+      e.preventDefault();
+      const title = document.getElementById('p-title').value;
+      const price = document.getElementById('p-price').value;
+      const image_url = document.getElementById('p-image').value;
+      const stock = document.getElementById('p-stock').value;
+      const description = document.getElementById('p-desc').value;
+
+      try {
+        await apiRequest('/products/add', {
+          method: 'POST',
+          body: JSON.stringify({ title, price, image_url, stock, description })
+        });
+        alert("Product added successfully to your catalog!");
+        // Reset form
+        document.getElementById('add-product-form').reset();
+        loadArtisanDashboard();
+      } catch (err) {
+        alert(`Failed to add product: ${err.message}`);
+      }
+    }
+
+    function switchFormTab(tab) {
+      const prodTab = document.getElementById('tab-add-product');
+      const servTab = document.getElementById('tab-add-service');
+      const prodForm = document.getElementById('add-product-form');
+      const servForm = document.getElementById('add-service-form');
+
+      if (tab === 'product') {
+        prodTab.className = "flex-1 pb-2 text-xs font-semibold border-b-2 border-[#B54F2A] text-gray-900 transition";
+        servTab.className = "flex-1 pb-2 text-xs font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-900 transition";
+        prodForm.classList.remove('hidden');
+        servForm.classList.add('hidden');
+      } else {
+        servTab.className = "flex-1 pb-2 text-xs font-semibold border-b-2 border-[#B54F2A] text-gray-900 transition";
+        prodTab.className = "flex-1 pb-2 text-xs font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-900 transition";
+        servForm.classList.remove('hidden');
+        prodForm.classList.add('hidden');
+      }
+    }
+
+    async function handleAddService(e) {
+      e.preventDefault();
+      const title = document.getElementById('s-title').value;
+      const price = document.getElementById('s-price').value;
+      const duration = document.getElementById('s-duration').value;
+      const description = document.getElementById('s-desc').value;
+
+      try {
+        await apiRequest('/services/add', {
+          method: 'POST',
+          body: JSON.stringify({ title, price, duration, description })
+        });
+        alert("Service published successfully!");
+        document.getElementById('add-service-form').reset();
+        loadArtisanDashboard();
+      } catch (err) {
+        alert(`Failed to add service: ${err.message}`);
+      }
+    }
+
+    function toggleProfileEdit(isEdit) {
+      const viewMode = document.getElementById('profile-view-mode');
+      const editForm = document.getElementById('profile-edit-form');
+      if (isEdit) {
+        viewMode.classList.add('hidden');
+        editForm.classList.remove('hidden');
+      } else {
+        viewMode.classList.remove('hidden');
+        editForm.classList.add('hidden');
+      }
+    }
+
+    async function handleProfileSubmit(e) {
+      e.preventDefault();
+      const business_name = document.getElementById('edit-biz-name').value;
+      const contact_phone = document.getElementById('edit-phone').value;
+      const city = document.getElementById('edit-city').value;
+      const state = document.getElementById('edit-state').value;
+      const bioEl = document.getElementById('edit-bio');
+      const bio = bioEl ? bioEl.value : undefined;
+      const availableEl = document.getElementById('edit-available');
+      const available = availableEl ? availableEl.checked : undefined;
+      const avatarEl = document.getElementById('edit-avatar');
+      const avatar = avatarEl ? avatarEl.value : undefined;
+
+      try {
+        const response = await apiRequest('/auth/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({ business_name, contact_phone, city, state, bio, available, avatar })
+        });
+        
+        // Update cached session user
+        setSession(getToken(), response.user);
+        alert("Profile updated successfully!");
+        checkAuthAndLoad();
+      } catch (err) {
+        alert(`Failed to update profile: ${err.message}`);
+      }
+    }
+
+    async function openOrderDispute(orderId) {
+      const reason = prompt("Describe your complaint or dispute reason for this order:");
+      if (!reason) return;
+      try {
+        await apiRequest(`/orders/${orderId}/dispute`, {
+          method: 'PATCH',
+          body: JSON.stringify({ reason })
+        });
+        alert("Dispute filed successfully! The platform administrator has been notified.");
+        loadCustomerDashboard();
+      } catch (err) {
+        alert("Failed to file dispute: " + err.message);
+      }
+    }
+
+    async function writeOrderReview(orderId, artisanId) {
+      const ratingInput = prompt("Enter a rating from 1 to 5 stars:");
+      if (ratingInput === null) return;
+      const rating = Number(ratingInput);
+      if (isNaN(rating) || rating < 1 || rating > 5) {
+        alert("Please enter a valid rating between 1 and 5.");
+        return;
+      }
+      const comment = prompt("Enter your review comment (Optional):") || "";
+
+      try {
+        // Create the review
+        await apiRequest('/reviews', {
+          method: 'POST',
+          body: JSON.stringify({ entrepreneur_id: artisanId, rating, comment })
+        });
+        // Mark the order as reviewed
+        await apiRequest(`/orders/${orderId}/review`, {
+          method: 'PATCH'
+        });
+        alert("Thank you for your feedback! Your review has been published.");
+        loadCustomerDashboard();
+      } catch (err) {
+        alert("Failed to submit review: " + err.message);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
+  </script>
+</body>
+</html>
