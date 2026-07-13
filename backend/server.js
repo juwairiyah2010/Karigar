@@ -28,6 +28,16 @@ if (!uri) {
 
 let dbClient;
 let db;
+let dbPromise = null;
+
+async function getDb() {
+  if (db) return db;
+  if (!dbPromise) {
+    dbPromise = initDb();
+  }
+  await dbPromise;
+  return db;
+}
 
 // In-Memory Database Fallback for local testing out-of-the-box
 class MockCollection {
@@ -139,13 +149,18 @@ async function initDb() {
 }
 
 // Middleware to protect API calls when database is not connected
-app.use((req, res, next) => {
-  if (!db && req.path.startsWith("/api")) {
-    return res.status(503).json({
-      error: "Database not connected. Please make sure you have added a valid MONGODB_URI in your .env file."
-    });
+app.use(async (req, res, next) => {
+  try {
+    await getDb();
+    if (!db && req.path.startsWith("/api")) {
+      return res.status(503).json({
+        error: "Database not connected. Please make sure you have added a valid MONGODB_URI in your .env file."
+      });
+    }
+    next();
+  } catch (error) {
+    res.status(503).json({ error: "Database connection failed during startup: " + error.message });
   }
-  next();
 });
 
 // Seeding logic (Rich Startup Seeding)
@@ -1146,7 +1161,11 @@ app.get("*", (req, res) => {
 });
 
 initDb().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+      console.log(`Server is running at http://localhost:${PORT}`);
+    });
+  }
 });
+
+export default app;
