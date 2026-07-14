@@ -18,6 +18,18 @@ const JWT_SECRET = process.env.JWT_SECRET || "kaarigar-super-secret-key-123";
 
 app.use(cors());
 app.use(express.json());
+
+// Middleware to ensure DB connection is initialized before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await getDb();
+    next();
+  } catch (error) {
+    console.error("Database connection middleware error:", error);
+    res.status(500).json({ error: "Database connection failed" });
+  }
+});
+
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 // MongoDB Connection
@@ -136,7 +148,10 @@ async function initDb() {
     return;
   }
   try {
-    dbClient = new MongoClient(uri);
+    dbClient = new MongoClient(uri, {
+      connectTimeoutMS: 3000,
+      serverSelectionTimeoutMS: 3000
+    });
     await dbClient.connect();
     const dbName = process.env.DATABASE_NAME || "kaarigar";
     db = dbClient.db(dbName);
